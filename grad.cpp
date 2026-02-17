@@ -1,5 +1,6 @@
 #include <cassert>
 #include <memory>
+#include <random>
 #include <unordered_set>
 #include <vector>
 #include <cmath>
@@ -15,6 +16,13 @@ using ValuePtr = std::shared_ptr<Value>;
 struct ValHash {
     size_t operator()(const ValuePtr value) const;
 };
+
+float get_random_float() {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_real_distribution<> dis(-1, 1);
+    return dis(gen);
+}
 
 class Value : public std::enable_shared_from_this<Value> {
 public:
@@ -188,9 +196,10 @@ public:
     Neuron(size_t layer_size, const ActivationType& actiavation_t) : activation_t(activation_t){
         for (size_t idx = 0; idx < layer_size; idx++) {
             //make all weights random to start with
-            weights.emplace_back(Value::create(getRandomFloat()));
+            weights.emplace_back(Value::create(get_random_float()));
         }
     }
+
 };
 
 
