@@ -2,7 +2,6 @@
 #include <memory>
 #include <unordered_set>
 #include <vector>
-#include <unordered_map>
 #include <cmath>
 #include <functional>
 #include <iostream>
@@ -72,20 +71,6 @@ public:
         return multiply(lhs, reciprocal);
     }
 
-
-    static ValuePtr relu(const ValuePtr& input) {
-        float relu_val = std::max(0.0f, input->data);
-        auto out = Value::create(relu_val, "ReLU");
-        out->prev = {input};
-
-        out->backward = [input, out](){
-            //relu gradient is just gradient
-            if (input) input->grad += (out->data > 0) * out->grad;
-        };
-
-        return out;
-    }
-
     static ValuePtr subtract(const ValuePtr& lhs, const ValuePtr& rhs) {
         ValuePtr out = Value::create(lhs->data - rhs->data, "-");
         out->prev = {lhs, rhs};
@@ -116,6 +101,31 @@ public:
         return out;
     }
 
+    static ValuePtr relu(const ValuePtr& input) {
+        float relu_val = std::max(0.0f, input->data);
+        auto out = Value::create(relu_val, "ReLU");
+        out->prev = {input};
+
+        out->backward = [input, out](){
+            //relu gradient is just gradient
+            if (input) input->grad += (out->data > 0) * out->grad;
+        };
+
+        return out;
+    }
+
+    static ValuePtr sigmoid(const ValuePtr& input) {
+        float sigmoid_val = std::pow(1 + std::exp(-input->data), -1);
+        auto out = Value::create(sigmoid_val, "sigmoid");
+        out->prev = {input};
+
+        out->backward = [input, out, sigmoid_val](){
+            // sigmoid gradient is sigmoid * 1 - sigmoid
+            if (input) input->grad += (sigmoid_val) * (1 - sigmoid_val) * out->grad;
+        };
+
+        return out;
+    }
 
     void buildTopo(ValuePtr v, std::unordered_set<ValuePtr, ValHash>& visited, std::vector<ValuePtr>& topo){
         if (!visited.count(v)){
@@ -150,6 +160,7 @@ public:
 size_t ValHash::operator()(const ValuePtr value) const {
     return std::hash<std::string>()(value.get()->op) ^ std::hash<float>()(value.get()->data);
 }
+
 
 int main() {
     ValuePtr a = Value::create(1.0, "");
