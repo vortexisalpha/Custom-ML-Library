@@ -178,6 +178,21 @@ class Activation {
     }
 };
 
+class Neuron {
+private:
+    std::vector<ValuePtr> weights;
+    ValuePtr bias = Value::create(0.0f);
+    const ActivationType activation_t;
+
+public:
+    Neuron(size_t layer_size, const ActivationType& actiavation_t) : activation_t(activation_t){
+        for (size_t idx = 0; idx < layer_size; idx++) {
+            //make all weights random to start with
+            weights.emplace_back(Value::create(getRandomFloat()));
+        }
+    }
+};
+
 
 int main() {
     ValuePtr a = Value::create(1.0, "");
