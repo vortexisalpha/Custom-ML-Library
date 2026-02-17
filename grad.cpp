@@ -200,6 +200,12 @@ public:
         }
     }
 
+    void zeroGrad () {
+        for (auto& weight : weights) {
+            weight->grad = 0;
+        }
+        bias->grad = 0;
+    }
 };
 
 
