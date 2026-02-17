@@ -161,6 +161,23 @@ size_t ValHash::operator()(const ValuePtr value) const {
     return std::hash<std::string>()(value.get()->op) ^ std::hash<float>()(value.get()->data);
 }
 
+//Neuons:
+
+enum ActivationType {
+    RELU,
+    SIGMOID
+};
+
+class Activation {
+    static std::shared_ptr<Value> relu(const ValuePtr& val){
+        return Value::relu(val);
+    }
+
+    static std::shared_ptr<Value> sigmoid(const ValuePtr& val){
+        return Value::sigmoid(val);
+    }
+};
+
 
 int main() {
     ValuePtr a = Value::create(1.0, "");
