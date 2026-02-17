@@ -231,8 +231,24 @@ public:
         }
 
         sum = Value::add(sum, bias);
+        
+        //get activation funtion
+        const auto& activation_function = Activation::activation_map[activation_t];
+        return activation_function(sum);
+    }
 
-        const auto& activation_func = Activation:
+    void print_paramaters() const {
+        std::cout << "Number of params: " << weights.size() + 1<< "\n";
+
+        for (const auto& param : weights){
+            std::cout << "val: " << param->data << " gradient: " << param->grad << "\n";
+        }
+
+        std::cout << "val: " << bias->data << " gradient: " << bias->grad << "\n\n";
+    }
+
+    void get_param_size() const {
+        std::cout << weights.size() + 1 << "\n";
     }
 };
 
