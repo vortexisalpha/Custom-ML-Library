@@ -81,6 +81,22 @@ public:
         return out;
     }
 
+    static ValuePtr pow(const ValuePtr& base, float exponent) {
+        float new_val = std::pow(base->data, exponent);
+        ValuePtr out = Value::create(new_val, "^");
+        out->prev = {base};
+
+        out->backward = [base_weak = std::weak_ptr<Value>(out),
+                         out_weak = std::weak_ptr<Value>(out),
+                         exponent](){
+
+            float grad_factor = exponent * std::pow(base_weak.lock()->data, exponent - 1);
+            base_weak.lock()->grad += grad_factor * out_weak.lock()->grad;
+        };
+
+        return out;
+    }
+
     void buildTopo(ValuePtr v, std::unordered_set<ValuePtr, ValHash>& visited, std::vector<ValuePtr>& topo){
         if (!visited.count(v)){
             visited.insert(v);
