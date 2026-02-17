@@ -1,6 +1,7 @@
 #include <cassert>
 #include <memory>
 #include <random>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include <cmath>
@@ -138,22 +139,22 @@ public:
         return out;
     }
 
-    void buildTopo(ValuePtr v, std::unordered_set<ValuePtr, ValHash>& visited, std::vector<ValuePtr>& topo){
+    void build_topo(ValuePtr v, std::unordered_set<ValuePtr, ValHash>& visited, std::vector<ValuePtr>& topo){
         if (!visited.count(v)){
             visited.insert(v);
             for (const auto& child : v->prev){
-                buildTopo(child, visited, topo);
+                build_topo(child, visited, topo);
             }
             topo.push_back(v);
         }
     }
     
-    void backProp(){
+    void back_prop(){
         this->grad = 1.0f;
 
         std::vector<ValuePtr> topo;
         std::unordered_set<ValuePtr, ValHash> visited;
-        buildTopo(shared_from_this(), visited, topo); //create graph
+        build_topo(shared_from_this(), visited, topo); //create graph
         
         for (auto it = topo.rbegin(); it != topo.rend(); it++){
             if ((*it)->backward){
@@ -187,6 +188,12 @@ class Activation {
     static std::shared_ptr<Value> sigmoid(const ValuePtr& val){
         return Value::sigmoid(val);
     }
+
+public:
+    static inline std::unordered_map<ActivationType, std::function<ValuePtr(ValuePtr&)>> activation_map = {
+        {ActivationType::RELU, relu},
+        {ActivationType::SIGMOID, sigmoid}
+    };
 };
 
 class Neuron {
@@ -203,11 +210,29 @@ public:
         }
     }
 
-    void zeroGrad () {
+    void zero_grad () {
         for (auto& weight : weights) {
             weight->grad = 0;
         }
         bias->grad = 0;
+    }
+
+    //dot product
+    ValuePtr operator()(const std::vector<ValuePtr>& multiplier){
+        if (multiplier.size() != weights.size()){
+            throw std::invalid_argument("Vectors must be same len");
+        }
+
+        ValuePtr sum = Value::create(0.0f);
+
+        for (size_t idx = 0; idx < weights.size(); idx++){
+            ValuePtr intermediate_val = Value::multiply(multiplier[idx], weights[idx]);
+            sum = Value::add(sum, intermediate_val);
+        }
+
+        sum = Value::add(sum, bias);
+
+        const auto& activation_func = Activation:
     }
 };
 
@@ -228,7 +253,7 @@ int main() {
 
     ValuePtr loss = Value::add(d,d);
 
-    loss->backProp();
+    loss->back_prop();
 
 };
 
