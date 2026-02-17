@@ -72,6 +72,20 @@ public:
         return multiply(lhs, reciprocal);
     }
 
+
+    static ValuePtr relu(const ValuePtr& input) {
+        float relu_val = std::max(0.0f, input->data);
+        auto out = Value::create(relu_val, "ReLU");
+        out->prev = {input};
+
+        out->backward = [input, out](){
+            //relu gradient is just gradient
+            if (input) input->grad += (out->data > 0) * out->grad;
+        };
+
+        return out;
+    }
+
     static ValuePtr subtract(const ValuePtr& lhs, const ValuePtr& rhs) {
         ValuePtr out = Value::create(lhs->data - rhs->data, "-");
         out->prev = {lhs, rhs};
