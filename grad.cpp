@@ -114,9 +114,10 @@ public:
         auto out = Value::create(relu_val, "ReLU");
         out->prev = {input};
 
-        out->backward = [input, out](){
+        out->backward = [input_weak = std::weak_ptr<Value>(input),
+                        out_weak = std::weak_ptr<Value>(out)](){
             //relu gradient is just gradient
-            if (input) input->grad += (out->data > 0) * out->grad;
+            input_weak.lock()->grad += (out_weak.lock()->data > 0) * out_weak.lock()->grad;
         };
 
         return out;
@@ -127,9 +128,11 @@ public:
         auto out = Value::create(sigmoid_val, "sigmoid");
         out->prev = {input};
 
-        out->backward = [input, out, sigmoid_val](){
+        out->backward = [input_weak = std::weak_ptr<Value>(input),
+                        out_weak = std::weak_ptr<Value>(out),
+                        sigmoid_val](){
             // sigmoid gradient is sigmoid * 1 - sigmoid
-            if (input) input->grad += (sigmoid_val) * (1 - sigmoid_val) * out->grad;
+            input_weak.lock()->grad += (sigmoid_val) * (1 - sigmoid_val) * out_weak.lock()->grad;
         };
 
         return out;
@@ -193,7 +196,7 @@ private:
     const ActivationType activation_t;
 
 public:
-    Neuron(size_t layer_size, const ActivationType& actiavation_t) : activation_t(activation_t){
+    Neuron(size_t layer_size, const ActivationType& activation_t) : activation_t(activation_t){
         for (size_t idx = 0; idx < layer_size; idx++) {
             //make all weights random to start with
             weights.emplace_back(Value::create(get_random_float()));
