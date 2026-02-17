@@ -53,7 +53,7 @@ public:
         return out;
     }
 
-        static ValuePtr multiply(const ValuePtr& lhs, const ValuePtr& rhs) {
+    static ValuePtr multiply(const ValuePtr& lhs, const ValuePtr& rhs) {
         ValuePtr out = Value::create(lhs->data * rhs->data, "*");
         out->prev = {lhs, rhs};
 
@@ -65,6 +65,11 @@ public:
         };
 
         return out;
+    }
+
+    static ValuePtr divide(const ValuePtr& lhs, const ValuePtr& rhs) {
+        ValuePtr reciprocal = pow(rhs, -1);
+        return multiply(lhs, reciprocal);
     }
 
     static ValuePtr subtract(const ValuePtr& lhs, const ValuePtr& rhs) {
@@ -96,6 +101,7 @@ public:
 
         return out;
     }
+
 
     void buildTopo(ValuePtr v, std::unordered_set<ValuePtr, ValHash>& visited, std::vector<ValuePtr>& topo){
         if (!visited.count(v)){
